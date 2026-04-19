@@ -3,133 +3,398 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Teachers</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Teachers - Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --brand: #1a1a2e; --accent: #e94560; --gold: #f5a623;
+            --surface: #fff; --bg: #f3f1eb; --surface-alt: #f8f7f4;
+            --text-primary: #1a1a2e; --text-muted: #6b7280;
+            --border: rgba(0,0,0,0.08); --sidebar-w: 240px;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: var(--brand); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .sidebar-logo .badge { display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo .icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .sidebar-logo .title { color: #fff; font-weight: 500; font-size: 14px; }
+        .sidebar-logo .subtitle { color: rgba(255,255,255,0.35); font-size: 11px; margin-top: 1px; }
+        .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+        .nav-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 12px 6px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.55); font-size: 14px; text-decoration: none; transition: all 0.18s; }
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+        .nav-item.active { background: rgba(233,69,96,0.15); color: #fff; font-weight: 500; }
+        .nav-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+        .nav-item.active .nav-icon, .nav-item:hover .nav-icon { opacity: 1; }
+        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(233,69,96,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--accent); }
+        .user-name { color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 500; }
+        .user-role { color: rgba(255,255,255,0.35); font-size: 11px; }
+        .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 13px; cursor: pointer; margin-top: 4px; transition: all 0.18s; }
+        .logout-btn:hover { background: rgba(233,69,96,0.1); color: var(--accent); }
+        .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; }
+        .content { padding: 32px; }
+        .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .search-wrap { position: relative; flex: 1; max-width: 360px; }
+        .search-wrap input { width: 100%; padding: 10px 14px 10px 38px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary); outline: none; transition: border-color 0.2s; }
+        .search-wrap input:focus { border-color: var(--accent); }
+        .search-wrap input::placeholder { color: #c5c9d4; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #b0b7c3; }
+        .btn-primary { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; margin-left: auto; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,46,0.2); }
+        .table-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--surface-alt); }
+        th { padding: 13px 20px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+        td { padding: 14px 20px; font-size: 14px; color: var(--text-primary); border-top: 1px solid var(--border); }
+        tr:hover td { background: #fafafa; }
+        .teacher-name-cell { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+        .desig-badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: #eeedfe; color: #534ab7; }
+        .dept-badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+        .dept-cs { background: #e6f1fb; color: #185fa5; }
+        .dept-ec { background: #fce9ec; color: #c53030; }
+        .dept-me { background: #fef3dc; color: #b45309; }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+        .btn-edit { background: var(--surface-alt); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-delete { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+        .btn-delete:hover { background: #fed7d7; }
+        .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--surface); border-radius: 16px; width: 580px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+        .modal-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); transition: color 0.15s; }
+        .modal-close:hover { color: var(--accent); }
+        .modal-body { padding: 24px 28px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 7px; }
+        .form-group input, .form-group select { width: 100%; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary); background: #fafaf8; border: 1.5px solid var(--border); border-radius: 10px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(233,69,96,0.08); }
+        .modal-footer { padding: 16px 28px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel { padding: 10px 20px; background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+        .btn-save { padding: 10px 24px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,46,0.2); }
+        .filter-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 20px;
+    background: var(--brand);
+    color: #fff;
+
+    border: none;
+    border-radius: 10px;
+
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: transform 0.15s, box-shadow 0.2s;
+
+    outline: none;
+
+    appearance: none; /* removes default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding-right: 36px; /* space for custom arrow */
+    position: relative;
+}
+
+/* hover same as button */
+.filter-select:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgb(255, 255, 255);
+}
+
+/* focus same as button */
+.filter-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgba(246, 246, 248, 0.993);
+}
+
+/* custom dropdown arrow */
+.filter-select {
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="sidebar-header"><h2>Admin Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="students.html">Students</a></li>
-                <li><a href="teachers.html" class="active">Teachers</a></li>
-                <li><a href="courses.html">Courses</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header>
-                <h1>Teacher Management</h1>
-                <button class="btn btn-primary" onclick="showAddModal()">Add New Teacher</button>
-            </header>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Employee ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Department</th>
-                            <th>Designation</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="teachersList"></tbody>
-                </table>
+
+<nav class="sidebar">
+    <div class="sidebar-logo">
+        <div class="badge">
+            <div class="icon">🎓</div>
+            <div><div class="title">CMS Portal</div><div class="subtitle">Admin Dashboard</div></div>
+        </div>
+    </div>
+    <div class="sidebar-nav">
+        <div class="nav-label">Main</div>
+        <a href="dashboard.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+        </a>
+        <a href="students.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Students
+        </a>
+        <a href="teachers.html" class="nav-item active">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Teachers
+        </a>
+        <a href="courses.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Courses
+        </a>
+    </div>
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar" id="userInitials">A</div>
+            <div><div class="user-name" id="userName">Admin</div><div class="user-role">Administrator</div></div>
+        </div>
+        <div class="logout-btn" id="logoutBtn">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+        </div>
+    </div>
+</nav>
+
+<div class="main">
+    <div class="topbar">
+        <h1>Teachers</h1>
+        <button class="btn-primary" onclick="showAddModal()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Add Teacher
+        </button>
+    </div>
+    <div class="content">
+        <div class="toolbar">
+            <div class="search-wrap">
+                <span class="search-icon"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <input type="text" id="searchInput" placeholder="Search teachers…" oninput="filterTeachers()">
+            </div>
+            <select class="filter-select" id="deptFilter" onchange="filterTeachers()">
+        <option value="">All Departments</option>
+        <option value="Computer Science">Computer Science</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Mechanical">Mechanical</option>
+    </select>
+        </div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Employee ID</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Qualification</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="teachersList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Teacher</h2>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" placeholder="Teacher name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="teacher@college.edu" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Leave blank to keep current">
+                </div>
+                <div class="form-group">
+                    <label>Employee ID</label>
+                    <input type="text" id="employeeId" placeholder="e.g. EMP001" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="department">
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Designation</label>
+                    <input type="text" id="designation" placeholder="Professor / Asst. Professor">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Qualification</label>
+                    <input type="text" id="qualification" placeholder="M.Tech, Ph.D">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="phone" placeholder="Phone number">
+                </div>
             </div>
         </div>
-    </div>
-
-    <div id="teacherModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Add/Edit Teacher</h2>
-            <form id="teacherForm">
-                <div class="form-group"><label>Full Name</label><input type="text" id="name" required></div>
-                <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
-                <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Leave blank to keep current"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Employee ID</label><input type="text" id="employeeId" required></div>
-                    <div class="form-group"><label>Department</label><select id="department"><option value="Computer Science">CS</option><option value="Electronics">EC</option><option value="Mechanical">ME</option></select></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Designation</label><input type="text" id="designation" placeholder="Professor/Asst. Professor"></div>
-                    <div class="form-group"><label>Qualification</label><input type="text" id="qualification" placeholder="M.Tech, Ph.D"></div>
-                </div>
-                <div class="form-group"><label>Phone</label><input type="text" id="phone"></div>
-                <button type="submit" class="btn btn-primary">Save Teacher</button>
-            </form>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-save" onclick="saveTeacher()">Save Teacher</button>
         </div>
     </div>
+</div>
 
-    <script src="../js/auth.js"></script>
-    <script>
-        let editingId = null;
-        const token = localStorage.getItem('token');
+<script src="../js/auth.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('userName').textContent = user.name || 'Admin';
+    document.getElementById('userInitials').textContent = (user.name || 'A')[0].toUpperCase();
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '../login.html'; });
 
-        async function loadTeachers() {
-            const res = await fetch('http://localhost:5000/api/teachers', { headers: { Authorization: `Bearer ${token}` } });
-            const teachers = await res.json();
-            document.getElementById('teachersList').innerHTML = teachers.map(t => `
-                <tr>
-                    <td>${t.employeeId}</td>
-                    <td>${t.userId?.name}</td>
-                    <td>${t.userId?.email}</td>
-                    <td>${t.department}</td>
-                    <td>${t.designation || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editTeacher('${t._id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteTeacher('${t._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+    let editingId = null;
+    let allTeachers = [];
+    const avatarColors = ['#e1f5ee|#0f6e56', '#eeedfe|#534ab7', '#fce9ec|#c53030', '#e6f1fb|#185fa5', '#fef3dc|#b45309'];
+    const deptClass = { 'Computer Science': 'dept-cs', 'Electronics': 'dept-ec', 'Mechanical': 'dept-me' };
+
+    async function loadTeachers() {
+        const res = await fetch('http://localhost:5000/api/teachers', { headers: { Authorization: `Bearer ${token}` } });
+        allTeachers = await res.json();
+        renderTeachers(allTeachers);
+    }
+
+    function renderTeachers(teachers) {
+        const tbody = document.getElementById('teachersList');
+        if (!teachers.length) {
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">👩‍🏫</div><p>No teachers found. Add your first teacher!</p></div></td></tr>`;
+            return;
         }
+        tbody.innerHTML = teachers.map((t, i) => {
+            const [bg, color] = avatarColors[i % avatarColors.length].split('|');
+            return `<tr>
+                <td><div class="teacher-name-cell">
+                    <div class="avatar" style="background:${bg};color:${color};">${(t.userId?.name || '?')[0].toUpperCase()}</div>
+                    <div>
+                        <div style="font-weight:500;">${t.userId?.name || '—'}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">${t.userId?.email || ''}</div>
+                    </div>
+                </div></td>
+                <td><code style="font-size:12px;background:var(--surface-alt);padding:3px 8px;border-radius:6px;">${t.employeeId || '—'}</code></td>
+                <td><span class="dept-badge ${deptClass[t.department] || ''}">${t.department || '—'}</span></td>
+                <td><span class="desig-badge">${t.designation || '—'}</span></td>
+                <td style="color:var(--text-muted);font-size:13px;">${t.qualification || '—'}</td>
+                <td><div class="action-btns">
+                    <button class="btn-sm btn-edit" onclick="editTeacher('${t._id}')">Edit</button>
+                    <button class="btn-sm btn-delete" onclick="deleteTeacher('${t._id}')">Delete</button>
+                </div></td>
+            </tr>`;
+        }).join('');
+    }
 
-        async function deleteTeacher(id) {
-            if(confirm('Delete this teacher?')) {
-                await fetch(`http://localhost:5000/api/teachers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-                loadTeachers();
-            }
-        }
+    function filterTeachers() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const dept = document.getElementById('deptFilter')?.value || "";
 
-        async function editTeacher(id) {
-            const res = await fetch(`http://localhost:5000/api/teachers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-            const t = await res.json();
-            editingId = id;
-            document.getElementById('name').value = t.userId?.name;
-            document.getElementById('email').value = t.userId?.email;
-            document.getElementById('employeeId').value = t.employeeId;
-            document.getElementById('department').value = t.department;
-            document.getElementById('designation').value = t.designation || '';
-            document.getElementById('qualification').value = t.qualification || '';
-            document.getElementById('phone').value = t.phone || '';
-            document.getElementById('teacherModal').style.display = 'block';
-        }
+    const filtered = allTeachers.filter(t => {
 
-        function showAddModal() { editingId = null; document.getElementById('teacherForm').reset(); document.getElementById('teacherModal').style.display = 'block'; }
-        function closeModal() { document.getElementById('teacherModal').style.display = 'none'; }
+        const name = (t.userId?.name || '').toLowerCase();
+        const empId = (t.employeeId || '').toLowerCase();
+        const department = (t.department || '');
 
-        document.getElementById('teacherForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                employeeId: document.getElementById('employeeId').value,
-                department: document.getElementById('department').value,
-                designation: document.getElementById('designation').value,
-                qualification: document.getElementById('qualification').value,
-                phone: document.getElementById('phone').value
-            };
-            const url = editingId ? `http://localhost:5000/api/teachers/${editingId}` : 'http://localhost:5000/api/teachers';
-            const method = editingId ? 'PUT' : 'POST';
-            await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(data) });
-            closeModal();
-            loadTeachers();
-        });
+        const matchSearch =
+            name.includes(q) ||
+            empId.includes(q) ||
+            department.toLowerCase().includes(q);
 
+        const matchDept =
+            !dept || department === dept;
+
+        return matchSearch && matchDept;
+    });
+
+    renderTeachers(filtered);
+}
+
+    function showAddModal() {
+        editingId = null;
+        document.getElementById('modalTitle').textContent = 'Add Teacher';
+        ['name','email','password','employeeId','designation','qualification','phone'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+    async function editTeacher(id) {
+        const res = await fetch(`http://localhost:5000/api/teachers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const t = await res.json();
+        editingId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Teacher';
+        document.getElementById('name').value = t.userId?.name || '';
+        document.getElementById('email').value = t.userId?.email || '';
+        document.getElementById('password').value = '';
+        document.getElementById('employeeId').value = t.employeeId || '';
+        document.getElementById('department').value = t.department || 'Computer Science';
+        document.getElementById('designation').value = t.designation || '';
+        document.getElementById('qualification').value = t.qualification || '';
+        document.getElementById('phone').value = t.phone || '';
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function deleteTeacher(id) {
+        if (!confirm('Delete this teacher?')) return;
+        const res = await fetch(`http://localhost:5000/api/teachers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        const result = await res.json();
+        if (!res.ok) { alert(result.error || 'Delete failed'); return; }
         loadTeachers();
-    </script>
+    }
+
+    async function saveTeacher() {
+        const data = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            employeeId: document.getElementById('employeeId').value,
+            department: document.getElementById('department').value,
+            designation: document.getElementById('designation').value,
+            qualification: document.getElementById('qualification').value,
+            phone: document.getElementById('phone').value
+        };
+        const url = editingId ? `http://localhost:5000/api/teachers/${editingId}` : 'http://localhost:5000/api/teachers';
+        const method = editingId ? 'PUT' : 'POST';
+        await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(data) });
+        closeModal();
+        loadTeachers();
+    }
+
+    loadTeachers();
+</script>
 </body>
 </html>

@@ -1,58 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fee Status</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fee Status</title>
+  <link rel="stylesheet" href="../student/css/style.css" />
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="sidebar-header"><h2>Student Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="attendance.html">Attendance</a></li>
-                <li><a href="grades.html">Grades</a></li>
-                <li><a href="resources.html">Resources</a></li>
-                <li><a href="timetable.html">Timetable</a></li>
-                <li><a href="fees.html" class="active">Fees</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header><h1>Fee Status</h1><div class="user-info"><span id="userName"></span><span id="userRole" class="role-badge">Student</span></div></header>
-            <div class="dashboard-card" id="feesContainer">
-                <div class="empty-state"><div class="empty-state-icon">💰</div><h4>No Fee Records</h4><p>Your fee details will appear here once updated.</p></div>
-            </div>
-        </div>
+<div class="dashboard-container">
+
+  <nav class="sidebar">
+    <div class="sidebar-header"><h2>Student Portal</h2></div>
+    <ul class="sidebar-menu">
+      <li><a href="dashboard.html">🏠&nbsp; Dashboard</a></li>
+      <li><a href="profile.html">👤&nbsp; My Profile</a></li>
+      <li><a href="attendance.html">📊&nbsp; Attendance</a></li>
+      <li><a href="grades.html">🎓&nbsp; Grades</a></li>
+      <li><a href="resources.html">📚&nbsp; Resources</a></li>
+      <li><a href="#" id="logoutBtn">🚪&nbsp; Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-content">
+    <header>
+      <h1>Fee Status</h1>
+      <div class="user-info">
+        <span id="userName">Loading…</span>
+        <span class="role-badge">Student</span>
+      </div>
+    </header>
+
+    <div class="dashboard-card" id="feesContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">💰</div>
+        <h4>No Fee Records</h4>
+        <p>Your fee details will appear here once updated.</p>
+      </div>
     </div>
-    <script src="../js/auth.js"></script>
-    <script>
-        (async () => {
-            const token = localStorage.getItem('token');
-            const user = getCurrentUser();
-            try {
-                const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, { headers: { Authorization: `Bearer ${token}` } });
-                if(studentRes.ok) {
-                    const student = await studentRes.json();
-                    const feeRes = await fetch(`http://localhost:5000/api/fees/student/${student._id}`, { headers: { Authorization: `Bearer ${token}` } });
-                    if(feeRes.ok) {
-                        const data = await feeRes.json();
-                        if(data.summary?.totalFee) {
-                            const percent = (data.summary.totalPaid / data.summary.totalFee) * 100;
-                            document.getElementById('feesContainer').innerHTML = `
-                                <div class="fee-status"><div class="fee-amount">Total: ₹${data.summary.totalFee.toLocaleString()}</div>
-                                <div class="fee-amount fee-paid">Paid: ₹${data.summary.totalPaid.toLocaleString()}</div>
-                                <div class="fee-amount fee-due">Due: ₹${data.summary.totalDue.toLocaleString()}</div>
-                                <div class="attendance-bar"><div class="attendance-fill" style="width:${percent}%; background:#28a745;">${percent.toFixed(1)}%</div></div></div>
-                                <h3>Payment History</h3><table>${data.fees?.flatMap(f => f.paymentHistory.map(p => `<tr><td>${new Date(p.date).toLocaleDateString()}</td><td>₹${p.amount}</td><td>${p.mode}</td><td>${p.receiptNumber}</td></tr>`)).join('') || '<tr><td colspan="4">No payments</td></tr>'}</table>
-                            `;
-                        }
-                    }
-                }
-            } catch(e) { console.error(e); }
-        })();
-    </script>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+  (async () => {
+    const token = localStorage.getItem('token');
+    const user  = getCurrentUser();
+
+    try {
+      const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!studentRes.ok) return;
+      const student = await studentRes.json();
+      document.getElementById('userName').textContent = student.userId?.name || 'Student';
+
+      const feeRes = await fetch(`http://localhost:5000/api/fees/student/${student._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!feeRes.ok) return;
+      const data = await feeRes.json();
+
+      if (data.summary?.totalFee) {
+        const { totalFee, totalPaid, totalDue } = data.summary;
+        const pct = Math.min(100, (totalPaid / totalFee) * 100).toFixed(1);
+
+        const rows = data.fees?.flatMap(f =>
+          f.paymentHistory.map(p => `
+            <tr>
+              <td>${new Date(p.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}</td>
+              <td style="font-weight:600;color:var(--green)">₹${p.amount.toLocaleString()}</td>
+              <td><span class="status-badge status-present">${p.mode}</span></td>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text-dim)">${p.receiptNumber}</td>
+            </tr>
+          `)
+        ).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-dim)">No payments recorded</td></tr>';
+
+        document.getElementById('feesContainer').innerHTML = `
+          <h2 style="margin-bottom:20px">Fee Summary</h2>
+
+          <div class="fee-status">
+            <div class="fee-amount">
+              <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:8px">Total Fee</div>
+              ₹${totalFee.toLocaleString()}
+            </div>
+            <div class="fee-amount fee-paid">
+              <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:8px">Paid</div>
+              ₹${totalPaid.toLocaleString()}
+            </div>
+            <div class="fee-amount fee-due">
+              <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:8px">Due</div>
+              ₹${totalDue.toLocaleString()}
+            </div>
+          </div>
+
+          <div style="margin-bottom:28px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.8rem;color:var(--text-muted)">
+              <span>Payment Progress</span><span>${pct}%</span>
+            </div>
+            <div class="attendance-bar">
+              <div class="attendance-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--green),#6deaaf)">${pct}%</div>
+            </div>
+          </div>
+
+          <h2 style="margin-bottom:14px">Payment History</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Amount</th><th>Mode</th><th>Receipt No.</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+    } catch (e) { console.error(e); }
+  })();
+
+  document.getElementById('logoutBtn').addEventListener('click', e => {
+    e.preventDefault(); localStorage.clear(); window.location.href = '../login.html';
+  });
+</script>
 </body>
 </html>

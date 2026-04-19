@@ -1,167 +1,654 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - College Management System</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="container">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <h1>College Management System</h1>
-                    <p>Login to your account</p>
-                </div>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </form>
-                <div id="errorMessage" class="error-message" style="margin-top: 10px;"></div>
-            </div>
-        </div>
-    </div>
-    <script src="js/auth.js"></script>
-</body>
-</html> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - College Management System</title>
-    <link rel="stylesheet" href="css/style.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand: #1a1a2e;
+            --accent: #e94560;
+            --accent-light: #ff6b81;
+            --gold: #f5a623;
+            --surface: #ffffff;
+            --surface-alt: #f8f7f4;
+            --text-primary: #1a1a2e;
+            --text-muted: #6b7280;
+            --border: rgba(0,0,0,0.1);
+            --input-bg: #fafaf8;
+        }
+
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            height: 100vh;
+            min-height: 100vh;
+            font-family: 'DM Sans', sans-serif;
+            background-color: #f3f1eb;
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+        }
+
+        /* Left panel - decorative */
+        .left-panel {
+            flex: 1;
+            background: var(--brand);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            border: 2px solid rgba(233,69,96,0.2);
+        }
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: -60px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            border: 2px solid rgba(245,166,35,0.15);
+        }
+
+        .logo-area {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 10px 16px;
+            border-radius: 50px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .login-wrapper {
-            text-align: center;
-        }
-
-        .tagline {
-            color: white;
-            margin-bottom: 20px;
-        }
-
-        .tagline h2 {
-            margin: 0;
-            font-weight: 500;
-        }
-
-        .tagline p {
-            margin-top: 5px;
             font-size: 14px;
-            opacity: 0.9;
         }
 
-        .login-card {
-            background: #fff;
-            padding: 35px;
-            border-radius: 12px;
-            width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .logo-text {
+            color: rgba(255,255,255,0.9);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
-        .login-header {
-            text-align: center;
+        .hero-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.2;
             margin-bottom: 20px;
         }
 
-        .login-header h1 {
-            font-size: 20px;
-            color: #333;
+        .hero-text h1 span {
+            color: var(--accent);
+        }
+
+        .hero-text p {
+            color: rgba(255,255,255,0.55);
+            font-size: 15px;
+            line-height: 1.8;
+            font-weight: 300;
+            max-width: 340px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat {
+            border-top: 1px solid rgba(255,255,255,0.12);
+            padding-top: 16px;
+        }
+
+        .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Decorative dots grid */
+        .dots-grid {
+            position: absolute;
+            top: 50%;
+            right: 32px;
+            transform: translateY(-50%);
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            opacity: 0.12;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        /* Right panel - form */
+        .right-panel {
+            width: 480px;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 56px 52px;
+            position: relative;
+        }
+
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-header .eyebrow {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .form-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .form-header p {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 300;
         }
 
         .form-group {
-            margin-bottom: 18px;
-            text-align: left;
+            margin-bottom: 24px;
         }
 
-        label {
-            font-size: 14px;
-            color: #444;
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
-        input {
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b0b7c3;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrap input {
             width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            margin-top: 5px;
+            padding: 14px 16px 14px 44px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-primary);
+            background: var(--input-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .btn {
-            width: 100%;
-            padding: 10px;
+        .input-wrap input::placeholder {
+            color: #c5c9d4;
+        }
+
+        .input-wrap input:focus {
+            border-color: var(--accent);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(233,69,96,0.08);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #b0b7c3;
+            background: none;
             border: none;
-            border-radius: 6px;
-            background: #667eea;
-            color: white;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover { color: var(--text-primary); }
+
+        .form-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
         }
 
-        .btn:hover {
-            background: #5a67d8;
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .remember-me span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .forgot-link {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover { text-decoration: underline; }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--brand);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(26,26,46,0.25);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login .btn-shine {
+            position: absolute;
+            top: 0; left: -75%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.6s;
+        }
+
+        .btn-login:hover .btn-shine {
+            left: 135%;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            font-size: 12px;
+            color: #c5c9d4;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .role-pills {
+            display: flex;
+            gap: 8px;
+        }
+
+        .role-pill {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            background: var(--surface-alt);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-pill:hover {
+            border-color: var(--accent);
+            background: #fff5f6;
+        }
+
+        .role-pill .pill-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .role-pill .pill-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
         }
 
         .error-message {
-            color: red;
-            text-align: center;
-            font-size: 14px;
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 8px;
+            color: #c53030;
+            font-size: 13px;
+            display: none;
         }
+
+        .error-message.show { display: block; }
+
+        .setup-link {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .setup-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .setup-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 900px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; padding: 40px 32px; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .right-panel > * {
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .right-panel .form-header { animation-delay: 0.05s; }
+        .right-panel .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .right-panel .form-group:nth-child(2) { animation-delay: 0.15s; }
+        .right-panel .form-footer-row { animation-delay: 0.2s; }
+        .right-panel .btn-login { animation-delay: 0.25s; }
     </style>
 </head>
 <body>
 
-<div class="login-wrapper">
-
-    
-    <div class="tagline">
-        <h2>Welcome to CMS Portal 🎓</h2>
-        <p>Manage students, faculty, and resources — all in one place</p>
-    </div>
-
-    <div class="login-card">
-        <div class="login-header">
-            <h1>Login</h1>
+<!-- Left decorative panel -->
+<div class="left-panel">
+    <div class="logo-area">
+        <div class="logo-badge">
+            <div class="logo-icon">🎓</div>
+            <span class="logo-text">CMS Portal</span>
         </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label> Your Id</label>
-                <input type="email" id="email" required>
-            </div>
-
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" required>
-            </div>
-
-            <button type="submit" class="btn">Login</button>
-        </form>
-
-        <div id="errorMessage" class="error-message" style="margin-top: 10px;"></div>
     </div>
 
+    <!-- Decorative dot grid -->
+    <div class="dots-grid">
+        <!-- 6x8 grid of dots -->
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <div class="hero-text">
+        <h1>Manage your<br><span>college</span><br>smarter.</h1>
+        <p>One unified platform for students, faculty, courses, and administration — built for modern institutions.</p>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat">
+            <div class="stat-number">1,200+</div>
+            <div class="stat-label">Students</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">80+</div>
+            <div class="stat-label">Faculty</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">120+</div>
+            <div class="stat-label">Courses</div>
+        </div>
+    </div>
+</div>
+
+<!-- Right form panel -->
+<div class="right-panel">
+    <div class="form-header">
+        <div class="eyebrow">Welcome back</div>
+        <h2>Sign in to<br>your portal</h2>
+        <p>Enter your credentials to access the dashboard</p>
+    </div>
+
+    <div class="form-group">
+        <label>Your ID / Email</label>
+        <div class="input-wrap">
+            <span class="input-icon">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </span>
+            <input type="email" id="email" placeholder="you@college.edu" required>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+            <span class="input-icon">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </span>
+            <input type="password" id="password" placeholder="Enter your password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword()" title="Show/hide password">
+                <svg id="eyeIcon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="form-footer-row">
+        <label class="remember-me">
+            <input type="checkbox" id="remember">
+            <span>Remember me</span>
+        </label>
+        <a href="#" class="forgot-link">Forgot password?</a>
+    </div>
+
+    <button class="btn-login" onclick="handleLogin()">
+        <span class="btn-shine"></span>
+        Sign In
+    </button>
+
+    <div class="divider">
+        <div class="divider-line"></div>
+        <span>or sign in as</span>
+        <div class="divider-line"></div>
+    </div>
+
+    <div class="role-pills">
+        <div class="role-pill" onclick="fillRole('student')">
+            <div class="pill-icon">🎒</div>
+            <div class="pill-label">Student</div>
+        </div>
+        <div class="role-pill" onclick="fillRole('teacher')">
+            <div class="pill-icon">📚</div>
+            <div class="pill-label">Teacher</div>
+        </div>
+        <div class="role-pill" onclick="fillRole('admin')">
+            <div class="pill-icon">🛡️</div>
+            <div class="pill-label">Admin</div>
+        </div>
+    </div>
+
+    <div id="errorMessage" class="error-message"></div>
+
+    <p class="setup-link">First time? <a href="register-admin.html">Create admin account →</a></p>
 </div>
 
 <script src="js/auth.js"></script>
+<script>
+    function togglePassword() {
+        const input = document.getElementById('password');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function fillRole(role) {
+        const placeholders = {
+            student: 'student@college.edu',
+            teacher: 'teacher@college.edu',
+            admin: 'admin@college.edu'
+        };
+        document.getElementById('email').placeholder = placeholders[role];
+        document.getElementById('email').focus();
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+
+        errorDiv.classList.remove('show');
+
+        if (!email || !password) {
+            errorDiv.textContent = 'Please enter your email and password.';
+            errorDiv.classList.add('show');
+            return;
+        }
+
+        const btn = document.querySelector('.btn-login');
+        btn.textContent = 'Signing in…';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.error || 'Login failed');
+
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            const role = data.user?.role;
+            if (role === 'admin') window.location.href = 'admin/dashboard.html';
+            else if (role === 'teacher') window.location.href = 'teacher/dashboard.html';
+            else window.location.href = 'student/dashboard.html';
+
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.classList.add('show');
+            btn.textContent = 'Sign In';
+            btn.disabled = false;
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+    });
+</script>
 </body>
 </html>

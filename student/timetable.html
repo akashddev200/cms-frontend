@@ -1,56 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Timetable</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Timetable</title>
+  <link rel="stylesheet" href="../student/css/style.css" />
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="sidebar-header"><h2>Student Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="attendance.html">Attendance</a></li>
-                <li><a href="grades.html">Grades</a></li>
-                <li><a href="resources.html">Resources</a></li>
-                <li><a href="timetable.html" class="active">Timetable</a></li>
-                <li><a href="fees.html">Fees</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header><h1>Class Timetable</h1><div class="user-info"><span id="userName"></span><span id="userRole" class="role-badge">Student</span></div></header>
-            <div class="dashboard-card" id="timetableContainer">
-                <div class="empty-state"><div class="empty-state-icon">📅</div><h4>No Timetable Available</h4><p>Your timetable will appear here once published.</p></div>
-            </div>
-        </div>
+<div class="dashboard-container">
+
+  <nav class="sidebar">
+    <div class="sidebar-header"><h2>Student Portal</h2></div>
+    <ul class="sidebar-menu">
+      <li><a href="dashboard.html">🏠&nbsp; Dashboard</a></li>
+      <li><a href="profile.html">👤&nbsp; My Profile</a></li>
+      <li><a href="attendance.html">📊&nbsp; Attendance</a></li>
+      <li><a href="grades.html">🎓&nbsp; Grades</a></li>
+      <li><a href="resources.html">📚&nbsp; Resources</a></li>
+      <li><a href="#" id="logoutBtn">🚪&nbsp; Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-content">
+    <header>
+      <h1>Class Timetable</h1>
+      <div class="user-info">
+        <span id="userName">Loading…</span>
+        <span class="role-badge">Student</span>
+      </div>
+    </header>
+
+    <div class="dashboard-card" id="timetableContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <h4>No Timetable Available</h4>
+        <p>Your schedule will appear here once published.</p>
+      </div>
     </div>
-    <script src="../js/auth.js"></script>
-    <script>
-        (async () => {
-            const token = localStorage.getItem('token');
-            const user = getCurrentUser();
-            try {
-                const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, { headers: { Authorization: `Bearer ${token}` } });
-                if(studentRes.ok) {
-                    const student = await studentRes.json();
-                    const ttRes = await fetch(`http://localhost:5000/api/timetable/student/${student._id}`, { headers: { Authorization: `Bearer ${token}` } });
-                    if(ttRes.ok) {
-                        const timetable = await ttRes.json();
-                        if(timetable.length) {
-                            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-                            const grouped = {};
-                            days.forEach(d => grouped[d] = timetable.filter(t => t.day === d));
-                            document.getElementById('timetableContainer').innerHTML = `<div class="timetable-grid">${days.map(day => `
-                                <div class="timetable-day"><h4>${day}</h4>${grouped[day].map(t => `<div class="class-item"><strong>${t.courseId?.courseName}</strong><br>${t.startTime} - ${t.endTime}<br>Room: ${t.room}</div>`).join('') || '<p>No classes</p>'}</div>
-                            `).join('')}</div>`;
-                        }
-                    }
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+  (async () => {
+    const token = localStorage.getItem('token');
+    const user  = getCurrentUser();
+    const days  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    try {
+      const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!studentRes.ok) return;
+      const student = await studentRes.json();
+      document.getElementById('userName').textContent = student.userId?.name || 'Student';
+
+      const ttRes = await fetch(`http://localhost:5000/api/timetable/student/${student._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!ttRes.ok) return;
+      const timetable = await ttRes.json();
+
+      if (timetable.length) {
+        const grouped = {};
+        days.forEach(d => grouped[d] = timetable.filter(t => t.day === d));
+
+        document.getElementById('timetableContainer').innerHTML = `
+          <h2 style="margin-bottom:20px">Weekly Schedule</h2>
+          <div class="timetable-grid">
+            ${days.map(day => `
+              <div class="timetable-day">
+                <h4>${day}</h4>
+                ${grouped[day].length
+                  ? grouped[day].map(t => `
+                    <div class="class-item">
+                      <strong>${t.courseId?.courseName || 'Course'}</strong>
+                      ${t.startTime} – ${t.endTime}<br>
+                      <span style="color:var(--gold-dim);font-size:0.75rem">📍 ${t.room}</span>
+                    </div>
+                  `).join('')
+                  : '<p style="color:var(--text-dim);font-size:0.8rem;text-align:center;padding:12px 0">No classes</p>'
                 }
-            } catch(e) { console.error(e); }
-        })();
-    </script>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    } catch (e) { console.error(e); }
+  })();
+
+  document.getElementById('logoutBtn').addEventListener('click', e => {
+    e.preventDefault(); localStorage.clear(); window.location.href = '../login.html';
+  });
+</script>
 </body>
 </html>

@@ -1,126 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Resources</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Resources — Teacher</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .upload-zone {
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      margin: 20px 0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-zone:hover { border-color: #667eea; background: #f8f9ff; }
+    .resource-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: white;
+    }
+    .btn-download {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .success-msg { background: #d4edda; color: #155724; padding: 12px; border-radius: 6px; display: none; }
+    .error-msg { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; display: none; }
+  </style>
 </head>
-
 <body>
-    <div class="dashboard-container">
+<div class="dashboard-container">
+  <nav class="sidebar">
+    <div class="sidebar-header"><h2>Teacher Portal</h2></div>
+    <ul class="sidebar-menu">
+      <li><a href="dashboard.html">🏠 Dashboard</a></li>
+      <li><a href="courses.html">📚 My Courses</a></li>
+      <li><a href="attendance.html">📝 Mark Attendance</a></li>
+      <li><a href="grades.html">📊 Enter Grades</a></li>
+      <li><a href="resources.html" class="active">📄 Upload Resources</a></li>
+      <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+    </ul>
+  </nav>
 
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <h2>Teacher Portal</h2>
-            </div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="courses.html">My Courses</a></li>
-                <li><a href="attendance.html">Mark Attendance</a></li>
-                <li><a href="grades.html">Enter Grades</a></li>
-                <li><a href="resources.html" class="active">Upload Resources</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
+  <div class="main-content">
+    <header>
+      <h1>Upload Resources</h1>
+      <div class="user-info">
+        <span id="userName">Loading…</span>
+        <span class="role-badge">Teacher</span>
+      </div>
+    </header>
 
-        <div class="main-content">
-            <header>
-                <h1>Upload Resources</h1>
-                <div class="user-info">
-                    <span id="userName"></span>
-                    <span id="userRole" class="role-badge">Teacher</span>
-                </div>
-            </header>
+    <!-- Upload Form -->
+    <div class="dashboard-card">
+      <h2>New Resource</h2>
+      <div id="successMsg" class="success-msg">✅ Resource uploaded successfully!</div>
+      <div id="errorMsg" class="error-msg">❌ Upload failed. Please try again.</div>
 
-            <div class="dashboard-card">
-                <form id="resourceForm">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="title" placeholder="e.g. Unit 3 - Linked List Notes" required />
+      </div>
 
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" id="title" required>
-                    </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="description" placeholder="Short description..."></textarea>
+      </div>
 
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="description"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Course</label>
-                        <select id="courseId" required></select>
-                    </div>
-
-                    <!-- ✅ NEW -->
-                    <div class="form-group">
-                        <label>Department</label>
-                        <select id="department" required>
-                            <option value="CSE">CSE</option>
-                            <option value="ISE">ISE</option>
-                            <option value="ECE">ECE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Semester</label>
-                        <select id="semester" required>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Upload File</label>
-                        <input type="file" id="file" required>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Upload Resource</button>
-                </form>
-            </div>
-
-            <div class="dashboard-card" style="margin-top:20px">
-                <h3>My Uploaded Resources</h3>
-                <div id="myResources"></div>
-            </div>
+      <div class="filter-row">
+        <div class="form-group">
+          <label>Course *</label>
+          <select id="courseId" required>
+            <option value="">— Select Course —</option>
+          </select>
         </div>
+        <div class="form-group">
+          <label>Semester *</label>
+          <select id="semester" required>
+            <option value="">— Select —</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Department *</label>
+        <select id="department" required>
+          <option value="">— Select Department —</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Information Technology">Information Technology</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Mechanical">Mechanical</option>
+        </select>
+      </div>
+
+      <div class="upload-zone" onclick="document.getElementById('file').click()">
+        <div class="upload-zone-icon" style="font-size:48px;margin-bottom:10px">📎</div>
+        <p id="fileLabel">Click to select file or drag & drop</p>
+        <small>PDF, DOCX, PPTX, ZIP (Max 20MB)</small>
+        <input type="file" id="file" style="display:none" onchange="updateFileLabel(this)" required />
+        
+      </div>
+
+      <button class="btn btn-primary" onclick="uploadResource()" style="width:100%; padding:14px;">
+        ⬆ Upload Resource
+      </button>
     </div>
 
-    <script src="../js/auth.js"></script>
+  
+    <!-- My Uploaded Resources -->
+<div class="dashboard-card" style="margin-top:24px">
+  <h2>My Uploaded Resources</h2>
+  
+  <div id="myResources">
+    <!-- Empty state will be replaced by JavaScript -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">📂</div>
+      <h4>No resources uploaded yet</h4>
+      <p>Your uploaded files will appear here.</p>
+    </div>
+  </div>
+</div>
+</div>
 
-    <script>
-        const token = localStorage.getItem('token');
+<script src="../js/auth.js"></script>
+<script>
+  const token = localStorage.getItem('token');
+  
+  // Set teacher name
+  document.getElementById('userName').textContent = getCurrentUser()?.name || 'Teacher';
 
-        document.getElementById('resourceForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+  function updateFileLabel(input) {
+    const label = document.getElementById('fileLabel');
+    if (input.files[0]) {
+      label.textContent = input.files[0].name;
+    }
+  }
 
-            const formData = new FormData();
+  // Load Courses for dropdown
+  async function loadCourses() {
+    try {
+      const res = await fetch('http://localhost:5000/api/courses/my', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const courses = await res.json();
+      const select = document.getElementById('courseId');
+      select.innerHTML = '<option value="">— Select Course —</option>' +
+        courses.map(c => `<option value="${c._id}">${c.courseName} (${c.courseCode})</option>`).join('');
+    } catch (e) {
+      console.error("Failed to load courses", e);
+    }
+  }
 
-            formData.append('title', document.getElementById('title').value);
-            formData.append('description', document.getElementById('description').value);
-            formData.append('courseId', document.getElementById('courseId').value);
-            formData.append('department', document.getElementById('department').value);
-            formData.append('semester', document.getElementById('semester').value);
+  // Upload Resource
+  async function uploadResource() {
+    const title = document.getElementById('title').value.trim();
+    const courseId = document.getElementById('courseId').value;
+    const department = document.getElementById('department').value;
+    const semester = document.getElementById('semester').value;
+    const file = document.getElementById('file').files[0];
 
-            // ✅ THIS LINE TAKES FILE INPUT
-            formData.append('file', document.getElementById('file').files[0]);
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg = document.getElementById('errorMsg');
 
-            await fetch('http://localhost:5000/api/resources', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-                body: formData
-            });
+    if (!title || !courseId || !department || !semester || !file) {
+      errorMsg.textContent = "Please fill all fields and select a file";
+      errorMsg.style.display = 'block';
+      successMsg.style.display = 'none';
+      return;
+    }
 
-            alert('File uploaded');
-        });
-    </script>
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', document.getElementById('description').value.trim());
+    formData.append('courseId', courseId);
+    formData.append('department', department);
+    formData.append('semester', semester);
+    formData.append('file', file);
 
+    try {
+      const res = await fetch('http://localhost:5000/api/resources', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        successMsg.style.display = 'block';
+        errorMsg.style.display = 'none';
+
+        // Clear form
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('file').value = '';
+        document.getElementById('fileLabel').textContent = 'Click to select file or drag & drop';
+
+        // Refresh list after upload
+        setTimeout(() => {
+          successMsg.style.display = 'none';
+          loadMyResources();
+        }, 1800);
+      } else {
+        errorMsg.style.display = 'block';
+      }
+    } catch (e) {
+      console.error(e);
+      errorMsg.style.display = 'block';
+    }
+  }
+
+  // Show Only Uploaded Resources
+  async function loadMyResources() {
+    const container = document.getElementById('myResources');
+
+    try {
+      const res = await fetch('http://localhost:5000/api/resources/my', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const resources = await res.json();
+
+      if (resources.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <h4>No Resources Uploaded Yet</h4>
+            <p>Upload your first study material above.</p>
+          </div>`;
+        return;
+      }
+
+      let html = `<h3>Your Uploaded Resources (${resources.length})</h3>`;
+
+      resources.forEach(r => {
+        html += `
+          <div class="resource-item">
+            <div style="flex:1;">
+              <div class="resource-title">${r.title}</div>
+              <div style="color:#555; font-size:0.9rem;">
+                ${r.courseId?.courseName || 'Course'} • ${r.department} • Sem ${r.semester}
+              </div>
+              ${r.description ? `<p style="margin-top:6px; font-size:0.85rem;">${r.description}</p>` : ''}
+            </div>
+            <a href="http://localhost:5000/uploads/${r.fileUrl}" target="_blank">
+              <button class="btn-download">↓ Download</button>
+            </a>
+          </div>`;
+      });
+
+      container.innerHTML = html;
+
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<p style="color:red; padding:20px;">Failed to load resources. Check console.</p>`;
+    }
+  }
+
+  // Initialize page
+  loadCourses();
+  loadMyResources();
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.clear();
+    window.location.href = '../login.html';
+  });
+</script>
 </body>
-
 </html>

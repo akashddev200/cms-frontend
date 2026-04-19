@@ -3,412 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Students - Admin</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Students - Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        .filters-bar {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: flex-end;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --brand: #1a1a2e; --accent: #e94560; --gold: #f5a623;
+            --surface: #fff; --bg: #f3f1eb; --surface-alt: #f8f7f4;
+            --text-primary: #1a1a2e; --text-muted: #6b7280;
+            --border: rgba(0,0,0,0.08); --sidebar-w: 240px;
         }
-        .filters-bar .form-group {
-            margin-bottom: 0;
-            flex: 1;
-            min-width: 150px;
-        }
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .student-count {
-            background: #667eea;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-left: 10px;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white;
-            margin: 20px auto;
-            padding: 30px;
-            width: 90%;
-            max-width: 600px;
-            border-radius: 10px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .close {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #999;
-        }
-        .close:hover {
-            color: #333;
-        }
-        .error-msg {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-        .success-msg {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: var(--brand); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .sidebar-logo .badge { display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo .icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .sidebar-logo .title { color: #fff; font-weight: 500; font-size: 14px; }
+        .sidebar-logo .subtitle { color: rgba(255,255,255,0.35); font-size: 11px; margin-top: 1px; }
+        .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+        .nav-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 12px 6px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.55); font-size: 14px; text-decoration: none; transition: all 0.18s; }
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+        .nav-item.active { background: rgba(233,69,96,0.15); color: #fff; font-weight: 500; }
+        .nav-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+        .nav-item.active .nav-icon, .nav-item:hover .nav-icon { opacity: 1; }
+        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(233,69,96,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--accent); }
+        .user-name { color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 500; }
+        .user-role { color: rgba(255,255,255,0.35); font-size: 11px; }
+        .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 13px; cursor: pointer; margin-top: 4px; transition: all 0.18s; }
+        .logout-btn:hover { background: rgba(233,69,96,0.1); color: var(--accent); }
+        .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; }
+        .content { padding: 32px; }
+        .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .search-wrap { position: relative; flex: 1; max-width: 360px; }
+        .search-wrap input { width: 100%; padding: 10px 14px 10px 38px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary); outline: none; transition: border-color 0.2s; }
+        .search-wrap input:focus { border-color: var(--accent); }
+        .search-wrap input::placeholder { color: #c5c9d4; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #b0b7c3; }
+        .btn-primary { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; margin-left: auto; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,46,0.2); }
+        .table-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--surface-alt); }
+        th { padding: 13px 20px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+        td { padding: 14px 20px; font-size: 14px; color: var(--text-primary); border-top: 1px solid var(--border); }
+        tr:hover td { background: #fafafa; }
+        .student-name-cell { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+        .dept-badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+        .dept-cs   { background: #e6f1fb; color: #185fa5; }
+        .dept-ec   { background: #fce9ec; color: #c53030; }
+        .dept-me   { background: #fef3dc; color: #b45309; }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+        .btn-edit   { background: var(--surface-alt); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-delete { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+        .btn-delete:hover { background: #fed7d7; }
+        .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state p { font-size: 15px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--surface); border-radius: 16px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+        .modal-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); line-height: 1; transition: color 0.15s; }
+        .modal-close:hover { color: var(--accent); }
+        .modal-body { padding: 24px 28px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 7px; }
+        .form-group input, .form-group select { width: 100%; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary); background: var(--input-bg, #fafaf8); border: 1.5px solid var(--border); border-radius: 10px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(233,69,96,0.08); }
+        .modal-footer { padding: 16px 28px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel { padding: 10px 20px; background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+        .btn-save   { padding: 10px 24px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,46,0.2);
+         }
+         .filter-select { padding: 10px 14px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary); outline: none; cursor: pointer; transition: border-color 0.2s; }
+        .filter-select:focus { border-color: var(--accent); }
+        .btn-primary { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; margin-left: auto; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,26,46,0.2); }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="sidebar-header"><h2>Admin Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="students.html" class="active">Students</a></li>
-                <li><a href="teachers.html">Teachers</a></li>
-                <li><a href="courses.html">Courses</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header>
-                <h1>Student Management</h1>
-                <button class="btn btn-primary" id="addStudentBtn">+ Add New Student</button>
-            </header>
 
-            <div class="filters-bar">
+<nav class="sidebar">
+    <div class="sidebar-logo">
+        <div class="badge">
+            <div class="icon">🎓</div>
+            <div><div class="title">CMS Portal</div><div class="subtitle">Admin Dashboard</div></div>
+        </div>
+    </div>
+    <div class="sidebar-nav">
+        <div class="nav-label">Main</div>
+        <a href="dashboard.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+        </a>
+        <a href="students.html" class="nav-item active">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Students
+        </a>
+        <a href="teachers.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Teachers
+        </a>
+        <a href="courses.html" class="nav-item">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Courses
+        </a>
+    </div>
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar" id="userInitials">A</div>
+            <div><div class="user-name" id="userName">Admin</div><div class="user-role">Administrator</div></div>
+        </div>
+        <div class="logout-btn" id="logoutBtn">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+        </div>
+    </div>
+</nav>
+
+<div class="main">
+    <div class="topbar">
+        <h1>Students</h1>
+        <button class="btn-primary" onclick="showAddModal()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Add Student
+        </button>
+    </div>
+    <div class="content">
+        <div class="toolbar">
+            <div class="search-wrap">
+                <span class="search-icon"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <input type="text" id="searchInput" placeholder="Search students…" oninput="filterStudents()">
+            </div>
+            <select class="filter-select" id="deptFilter" onchange="filterStudents()">
+        <option value="">All Departments</option>
+        <option value="Computer Science">Computer Science</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Mechanical">Mechanical</option>
+    </select>
+        </div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Roll No.</th>
+                        <th>Department</th>
+                        <th>Semester</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Batch</th>
+                        <th>Enrollment Year</th>
+                        <th>Blood Group</th>
+                        <th>Parent Name</th>
+                        <th>Parent Phone</th>
+
+                        <th>Actions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Student</h2>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
                 <div class="form-group">
-                    <label>🏛️ Filter by Department</label>
-                    <select id="filterDepartment">
-                        <option value="">All Departments</option>
+                    <label>Full Name</label>
+                    <input type="text" id="name" placeholder="Student name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="student@college.edu" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Leave blank to keep current">
+                </div>
+                <div class="form-group">
+                    <label>Roll Number</label>
+                    <input type="text" id="rollNumber" placeholder="e.g. CS2024001" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="department">
                         <option value="Computer Science">Computer Science</option>
-                        <option value="Information Technology">Information Technology</option>
                         <option value="Electronics">Electronics</option>
                         <option value="Mechanical">Mechanical</option>
-                        <option value="Civil">Civil</option>
-                        <option value="Electrical">Electrical</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>📚 Filter by Semester</label>
-                    <select id="filterSemester">
-                        <option value="">All Semesters</option>
-                        <option value="1">1st Semester</option>
-                        <option value="2">2nd Semester</option>
-                        <option value="3">3rd Semester</option>
-                        <option value="4">4th Semester</option>
-                        <option value="5">5th Semester</option>
-                        <option value="6">6th Semester</option>
-                        <option value="7">7th Semester</option>
-                        <option value="8">8th Semester</option>
-                    </select>
-                </div>
-                <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply Filters</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()" style="background: #6c757d;">🗑️ Clear</button>
+                    <label>Semester</label>
+                    <input type="number" id="semester" min="1" max="8" placeholder="1–8">
                 </div>
             </div>
-
-            <div class="table-container">
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Student List</h3>
-                    <span class="student-count" id="studentCount">0 Students</span>
-                </div>
-                <table style="width:100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th>Roll Number</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Department</th>
-                            <th>Semester</th>
-                            <th>Batch</th>
-                            <th>Phone</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentsList">
-                        <tr><td colspan="8" style="text-align:center; padding:40px;">Loading students...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div id="studentModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">Add New Student</h2>
-            <div id="modalError" class="error-msg"></div>
-            <div id="modalSuccess" class="success-msg"></div>
-            <form id="studentForm">
-                <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password *</label>
-                    <input type="password" id="password" placeholder="Enter password" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Roll Number *</label>
-                        <input type="text" id="rollNumber" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Department *</label>
-                        <select id="department" required>
-                            <option value="">-- Select --</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Mechanical">Mechanical</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Semester *</label>
-                        <input type="number" id="semester" min="1" max="8" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Batch *</label>
-                        <input type="text" id="batch" placeholder="2021-2025" required>
-                    </div>
-                </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label>Phone</label>
-                    <input type="tel" id="phone">
+                    <input type="text" id="phone" placeholder="Phone number">
                 </div>
                 <div class="form-group">
-                    <label>Address</label>
-                    <textarea id="address" rows="2"></textarea>
+                    <label>Date of Birth</label>
+                    <input type="date" id="dateOfBirth">
                 </div>
-                <button type="submit" class="btn btn-primary" id="saveBtn">Save Student</button>
-            </form>
+                <div class="form-group">
+    <label>Blood Group</label>
+    <select id="bloodGroup">
+        <option value="">-- Select Blood Group --</option>
+        <option value="A+">A+</option>
+        <option value="A-">A-</option>
+        <option value="B+">B+</option>
+        <option value="B-">B-</option>
+        <option value="AB+">AB+</option>
+        <option value="AB-">AB-</option>
+        <option value="O+">O+</option>
+        <option value="O-">O-</option>
+    </select>
+</div>
+                <div class="form-group">
+    <label>Batch</label>
+    <input type="text" id="batch" placeholder="e.g. 2021-2025">
+</div>
+            </div>
+            <div class="form-row">
+    <div class="form-group">
+        <label>Parent Name</label>
+        <input type="text" id="parentName" placeholder="Parent/Guardian name">
+    </div>
+    <div class="form-group">
+        <label>Parent Phone</label>
+        <input type="text" id="parentPhone" placeholder="Parent phone number">
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label>Enrollment Year</label>
+        <input type="number" id="enrollmentYear" placeholder="e.g. 2024">
+    </div>
+</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-save" onclick="saveStudent()">Save Student</button>
         </div>
     </div>
+</div>
 
-    <script>
-        const API_URL = 'http://localhost:5000/api';
-        const token = localStorage.getItem('token');
-        let editingId = null;
-        let allStudents = [];
+<script src="../js/auth.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('userName').textContent = user.name || 'Admin';
+    document.getElementById('userInitials').textContent = (user.name || 'A')[0].toUpperCase();
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '../login.html'; });
 
-        function openModal() {
-            document.getElementById('studentModal').style.display = 'block';
-            document.getElementById('modalError').style.display = 'none';
-            document.getElementById('modalSuccess').style.display = 'none';
+    let editingId = null;
+    let allStudents = [];
+
+    const deptClass = { 'Computer Science': 'dept-cs', 'Electronics': 'dept-ec', 'Mechanical': 'dept-me' };
+    const avatarColors = ['#e6f1fb|#185fa5', '#fce9ec|#c53030', '#fef3dc|#b45309', '#e1f5ee|#0f6e56', '#eeedfe|#534ab7'];
+
+    function avatarStyle(name, idx) {
+        const [bg, color] = avatarColors[idx % avatarColors.length].split('|');
+        return `background:${bg};color:${color};`;
+    }
+
+    async function loadStudents() {
+        const res = await fetch('http://localhost:5000/api/students', { headers: { Authorization: `Bearer ${token}` } });
+        allStudents = await res.json();
+        renderStudents(allStudents);
+    }
+
+    function renderStudents(students) {
+        const tbody = document.getElementById('studentsList');
+        if (!students.length) {
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🎒</div><p>No students found. Add your first student!</p></div></td></tr>`;
+            return;
         }
+        tbody.innerHTML = students.map((s, i) => `
+<tr>
+    <td>
+        <div class="student-name-cell">
+            <div class="avatar" style="${avatarStyle(s.userId?.name, i)}">
+                ${(s.userId?.name || '?')[0].toUpperCase()}
+            </div>
+            <span>${s.userId?.name || '—'}</span>
+        </div>
+    </td>
 
-        function closeModal() {
-            document.getElementById('studentModal').style.display = 'none';
-            editingId = null;
-        }
+    <td>${s.rollNumber || '—'}</td>
 
-        function showAddModal() {
-            editingId = null;
-            document.getElementById('modalTitle').textContent = 'Add New Student';
-            document.getElementById('studentForm').reset();
-            document.getElementById('password').required = true;
-            document.getElementById('password').placeholder = 'Enter password';
-            openModal();
-        }
+    <td>
+        <span class="dept-badge ${deptClass[s.department] || ''}">
+            ${s.department || '—'}
+        </span>
+    </td>
 
-        async function loadStudents() {
-            try {
-                const res = await fetch(`${API_URL}/students`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                allStudents = await res.json();
-                displayStudents(allStudents);
-                document.getElementById('studentCount').textContent = `${allStudents.length} Students`;
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+    <td>Sem ${s.semester || '—'}</td>
 
-        function displayStudents(students) {
-            const tbody = document.getElementById('studentsList');
-            if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No students found</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = students.map(s => `
-                <tr>
-                    <td>${s.rollNumber || 'N/A'}</td>
-                    <td>${s.userId?.name || 'N/A'}</td>
-                    <td>${s.userId?.email || 'N/A'}</td>
-                    <td>${s.department || 'N/A'}</td>
-                    <td>${s.semester || 'N/A'}</td>
-                    <td>${s.batch || 'N/A'}</td>
-                    <td>${s.phone || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editStudent('${s._id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    <td>${s.userId?.email || '—'}</td>
 
-        function applyFilters() {
-            const department = document.getElementById('filterDepartment').value;
-            const semester = document.getElementById('filterSemester').value;
-            let filtered = [...allStudents];
-            if (department) filtered = filtered.filter(s => s.department === department);
-            if (semester) filtered = filtered.filter(s => s.semester === parseInt(semester));
-            displayStudents(filtered);
-            document.getElementById('studentCount').textContent = `${filtered.length} Students`;
-        }
+    <!-- ✅ NEW FIELDS -->
+    <td>${s.phone || '—'}</td>
 
-        function clearFilters() {
-            document.getElementById('filterDepartment').value = '';
-            document.getElementById('filterSemester').value = '';
-            displayStudents(allStudents);
-            document.getElementById('studentCount').textContent = `${allStudents.length} Students`;
-        }
+    <td>${s.batch || '—'}</td>
 
-        async function deleteStudent(id) {
-            if (confirm('Delete this student?')) {
-                await fetch(`${API_URL}/students/${id}`, {
-                    method: 'DELETE',
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                loadStudents();
-            }
-        }
+    <td>${s.enrollmentYear || '—'}</td>
 
-        async function editStudent(id) {
-            try {
-                const res = await fetch(`${API_URL}/students/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const student = await res.json();
-                editingId = id;
-                document.getElementById('modalTitle').textContent = 'Edit Student';
-                document.getElementById('name').value = student.userId?.name || '';
-                document.getElementById('email').value = student.userId?.email || '';
-                document.getElementById('password').placeholder = 'Leave blank to keep current';
-                document.getElementById('password').required = false;
-                document.getElementById('rollNumber').value = student.rollNumber || '';
-                document.getElementById('department').value = student.department || '';
-                document.getElementById('semester').value = student.semester || '';
-                document.getElementById('batch').value = student.batch || '';
-                document.getElementById('phone').value = student.phone || '';
-                document.getElementById('address').value = student.address || '';
-                openModal();
-            } catch (error) {
-                alert('Error loading student');
-            }
-        }
+    <td>
+        <span class="blood-badge">
+            ${s.bloodGroup || '—'}
+        </span>
+    </td>
 
-        document.getElementById('studentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.textContent = 'Saving...';
-            saveBtn.disabled = true;
-            
-            const errorDiv = document.getElementById('modalError');
-            const successDiv = document.getElementById('modalSuccess');
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
-            
-            const studentData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                rollNumber: document.getElementById('rollNumber').value,
-                department: document.getElementById('department').value,
-                semester: parseInt(document.getElementById('semester').value),
-                batch: document.getElementById('batch').value,
-                phone: document.getElementById('phone').value || '',
-                address: document.getElementById('address').value || ''
-            };
-            
-            console.log('Sending data:', studentData);
-            
-            try {
-                const url = editingId ? `${API_URL}/students/${editingId}` : `${API_URL}/students`;
-                const method = editingId ? 'PUT' : 'POST';
-                
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify(studentData)
-                });
-                
-                const result = await response.json();
-                console.log('Server response:', result);
-                
-                if (response.ok) {
-                    successDiv.textContent = editingId ? 'Student updated successfully!' : 'Student added successfully!';
-                    successDiv.style.display = 'block';
-                    setTimeout(() => {
-                        closeModal();
-                        loadStudents();
-                    }, 1500);
-                } else {
-                    errorDiv.textContent = result.error || 'Failed to save student';
-                    errorDiv.style.display = 'block';
-                    saveBtn.textContent = editingId ? 'Update Student' : 'Save Student';
-                    saveBtn.disabled = false;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                errorDiv.textContent = 'Network error. Please check backend connection.';
-                errorDiv.style.display = 'block';
-                saveBtn.textContent = editingId ? 'Update Student' : 'Save Student';
-                saveBtn.disabled = false;
-            }
-        });
+    <td>${s.parentName || '—'}</td>
 
-        const addBtn = document.getElementById('addStudentBtn');
-        if (addBtn) {
-            addBtn.onclick = showAddModal;
-        }
+    <td>${s.parentPhone || '—'}</td>
 
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.clear();
-            window.location.href = '../login.html';
-        });
+    <!-- ACTION BUTTONS -->
+    <td>
+        <div class="action-btns">
+            <button class="btn-sm btn-edit" onclick="editStudent('${s._id}')">Edit</button>
+            <button class="btn-sm btn-delete" onclick="deleteStudent('${s._id}')">Delete</button>
+        </div>
+    </td>
+</tr>
+`).join('');
+    }
 
+    function filterStudents() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const dept = document.getElementById('deptFilter').value;
+
+    const filtered = allStudents.filter(s => {
+
+        const matchDept = !dept || (s.department === dept);
+
+        const matchSearch =
+            (s.userId?.name || '').toLowerCase().includes(q) ||
+            (s.rollNumber || '').toLowerCase().includes(q);
+
+        return matchDept && matchSearch;
+    });
+
+    renderStudents(filtered);
+}
+
+    function showAddModal() {
+        editingId = null;
+        document.getElementById('modalTitle').textContent = 'Add Student';
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('rollNumber').value = '';
+        document.getElementById('semester').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('dateOfBirth').value = '';
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+    async function editStudent(id) {
+        const res = await fetch(`http://localhost:5000/api/students/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const s = await res.json();
+        editingId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Student';
+        document.getElementById('name').value = s.userId?.name || '';
+        document.getElementById('email').value = s.userId?.email || '';
+        document.getElementById('password').value = '';
+        document.getElementById('rollNumber').value = s.rollNumber || '';
+        document.getElementById('department').value = s.department || 'Computer Science';
+        document.getElementById('semester').value = s.semester || '';
+        document.getElementById('phone').value = s.phone || '';
+        document.getElementById('dateOfBirth').value = s.dateOfBirth ? s.dateOfBirth.split('T')[0] : '';
+
+        // ✅ NEW FIELDS
+        document.getElementById('parentName').value = s.parentName || '';
+        document.getElementById('parentPhone').value = s.parentPhone || '';
+        document.getElementById('enrollmentYear').value = s.enrollmentYear || '';
+        document.getElementById('bloodGroup').value = s.bloodGroup || '';
+
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function deleteStudent(id) {
+        if (!confirm('Delete this student?')) return;
+        await fetch(`http://localhost:5000/api/students/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
         loadStudents();
-    </script>
+    }
+
+    async function saveStudent() {
+    const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        rollNumber: document.getElementById('rollNumber').value,
+        department: document.getElementById('department').value,
+        semester: parseInt(document.getElementById('semester').value),
+        batch: document.getElementById('batch')?.value || '',
+
+        phone: document.getElementById('phone').value,
+        dateOfBirth: document.getElementById('dateOfBirth').value,
+
+        parentName: document.getElementById('parentName').value,
+        parentPhone: document.getElementById('parentPhone').value,
+        enrollmentYear: document.getElementById('enrollmentYear').value,
+        bloodGroup: document.getElementById('bloodGroup').value
+    };
+
+    // ✅ Only send password if user entered it
+    const passwordValue = document.getElementById('password').value;
+    if (passwordValue) {
+        data.password = passwordValue;
+    }
+
+    const url = editingId
+        ? `http://localhost:5000/api/students/${editingId}`
+        : 'http://localhost:5000/api/students';
+
+    const method = editingId ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    console.log(result);
+
+    if (!res.ok) {
+        alert(result.error); // 🔥 show exact backend error
+        return;
+    }
+
+    closeModal();
+    loadStudents();
+}
+
+    loadStudents();
+</script>
 </body>
 </html>

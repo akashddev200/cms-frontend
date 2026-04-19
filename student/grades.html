@@ -1,55 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Grades</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Grades</title>
+  <link rel="stylesheet" href="../student/css/style.css" />
+  <style>
+    .grade-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .grade-A { background: #d4edda; color: #155724; }
+    .grade-B { background: #fff3cd; color: #856404; }
+    .grade-C { background: #cce5ff; color: #004085; }
+    .grade-D, .grade-F { background: #f8d7da; color: #721c24; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; font-weight: 600; }
+    .sgpa-display {
+      background: #f8f9fa;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.1rem;
+    }
+    .loading { text-align: center; padding: 50px; color: #666; }
+  </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar">
-            <div class="sidebar-header"><h2>Student Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="attendance.html">Attendance</a></li>
-                <li><a href="grades.html" class="active">Grades</a></li>
-                <li><a href="resources.html">Resources</a></li>
-                <li><a href="timetable.html">Timetable</a></li>
-                <li><a href="fees.html">Fees</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header><h1>My Grades</h1><div class="user-info"><span id="userName"></span><span id="userRole" class="role-badge">Student</span></div></header>
-            <div class="dashboard-card" id="gradesContainer">
-                <div class="empty-state"><div class="empty-state-icon">📖</div><h4>No Grades Available</h4><p>Your results will appear here once published.</p></div>
-            </div>
-        </div>
+<div class="dashboard-container">
+  <nav class="sidebar">
+    <div class="sidebar-header"><h2>Student Portal</h2></div>
+    <ul class="sidebar-menu">
+      <li><a href="dashboard.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 My Profile</a></li>
+      <li><a href="attendance.html">📊 Attendance</a></li>
+      <li><a href="grades.html" class="active">🎓 Grades</a></li>
+      <li><a href="resources.html">📚 Resources</a></li>
+      <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-content">
+    <header>
+      <h1>My Grades</h1>
+      <div class="user-info">
+        <span id="userName">Loading…</span>
+        <span class="role-badge">Student</span>
+      </div>
+    </header>
+
+    <div class="dashboard-card" id="gradesContainer">
+      <div class="loading">🔄 Loading your grades...</div>
     </div>
-    <script src="../js/auth.js"></script>
-    <script>
-        (async () => {
-            const token = localStorage.getItem('token');
-            const user = getCurrentUser();
-            try {
-                const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, { headers: { Authorization: `Bearer ${token}` } });
-                if(studentRes.ok) {
-                    const student = await studentRes.json();
-                    const gradesRes = await fetch(`http://localhost:5000/api/grades/student/${student._id}`, { headers: { Authorization: `Bearer ${token}` } });
-                    if(gradesRes.ok) {
-                        const data = await gradesRes.json();
-                        if(data.grades?.length) {
-                            document.getElementById('gradesContainer').innerHTML = `
-                                <table><thead><tr><th>Course</th><th>Internal</th><th>External</th><th>Total</th><th>Grade</th></tr></thead>
-                                <tbody>${data.grades.map(g => `<tr><td>${g.courseId?.courseName}</td><td>${g.internalMarks}</td><td>${g.externalMarks}</td><td>${g.totalMarks}</td><td class="grade-badge grade-${g.grade?.charAt(0)}">${g.grade}</td></tr>`).join('')}</tbody></table>
-                                <div style="margin-top:20px;text-align:center"><strong>SGPA: ${data.summary?.sgpa || 0}</strong></div>
-                            `;
-                        }
-                    }
-                }
-            } catch(e) { console.error(e); }
-        })();
-    </script>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+(async () => {
+  const token = localStorage.getItem('token');
+  const container = document.getElementById('gradesContainer');
+
+  container.innerHTML = `<div class="loading">🔄 Debugging... Please wait</div>`;
+
+  if (!token) {
+    container.innerHTML = `<div class="empty-state"><h4>Please login first</h4></div>`;
+    return;
+  }
+
+  try {
+    const user = getCurrentUser();
+    console.log("Current User from getCurrentUser():", user);
+
+    if (!user?.email) throw new Error("User email not found");
+
+    // Step 1: Get student profile
+    console.log("Fetching student profile for email:", user.email);
+    const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log("Student profile status:", studentRes.status);
+    const student = await studentRes.json();
+    console.log("Student data received:", student);
+
+    if (!studentRes.ok) throw new Error("Failed to get student profile");
+
+    document.getElementById('userName').textContent = student.userId?.name || student.name || "Student";
+
+    // Step 2: Fetch grades
+    console.log("Fetching grades for student ID:", student._id);
+    const gradesRes = await fetch(`http://localhost:5000/api/grades/student/${student._id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log("Grades API status:", gradesRes.status);
+
+    const result = await gradesRes.json();
+    console.log("Full grades response:", result);
+
+    const grades = Array.isArray(result) ? result : (result.grades || []);
+
+    if (grades.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📖</div>
+          <h4>No Grades Found</h4>
+          <p>Backend returned empty grades array.</p>
+          <small style="color:gray">Check backend terminal for logs</small>
+        </div>`;
+      return;
+    }
+
+    // If we reach here, we have grades
+    let html = `<h2>My Grade Sheet (${grades.length} courses)</h2><table><thead><tr>
+                  <th>Course</th><th>Internal</th><th>External</th><th>Total</th><th>Grade</th>
+                </tr></thead><tbody>`;
+
+    grades.forEach(g => {
+      const courseName = g.courseId?.courseName || 'Unknown';
+      const total = (g.internalMarks || 0) + (g.externalMarks || 0);
+      html += `<tr>
+        <td>${courseName}</td>
+        <td>${g.internalMarks || 0}</td>
+        <td>${g.externalMarks || 0}</td>
+        <td><strong>${total}</strong></td>
+        <td><span class="grade-badge grade-${g.grade || 'F'}">${g.grade || 'F'}</span></td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+
+    if (result.summary?.sgpa) {
+      html += `<div class="sgpa-display"><span>SGPA</span><strong>${result.summary.sgpa}</strong></div>`;
+    }
+
+    container.innerHTML = html;
+
+  } catch (error) {
+    console.error("❌ Final Error:", error);
+    container.innerHTML = `
+      <div class="empty-state">
+        <h4>Error Loading Grades</h4>
+        <p>${error.message}</p>
+        <small>Open F12 → Console and send me the logs</small>
+      </div>`;
+  }
+})();
+</script>
 </body>
 </html>

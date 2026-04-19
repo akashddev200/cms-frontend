@@ -1,52 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Attendance</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Attendance</title>
+  <link rel="stylesheet" href="../student/css/style.css" />
 </head>
 <body>
-    <div class="dashboard-container">
-        <nav class="sidebar"><div class="sidebar-header"><h2>Student Portal</h2></div>
-            <ul class="sidebar-menu">
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="attendance.html" class="active">Attendance</a></li>
-                <li><a href="grades.html">Grades</a></li>
-                <li><a href="resources.html">Resources</a></li>
-                <li><a href="timetable.html">Timetable</a></li>
-                <li><a href="fees.html">Fees</a></li>
-                <li><a href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content">
-            <header><h1>My Attendance</h1><div class="user-info"><span id="userName"></span><span id="userRole" class="role-badge">Student</span></div></header>
-            <div class="dashboard-card"><div id="attendanceDetails"><div class="empty-state"><div class="empty-state-icon">📊</div><h4>No Attendance Records</h4><p>No attendance marked yet.</p></div></div></div>
+<div class="dashboard-container">
+
+  <nav class="sidebar">
+    <div class="sidebar-header"><h2>Student Portal</h2></div>
+    <ul class="sidebar-menu">
+      <li><a href="dashboard.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 My Profile</a></li>
+      <li><a href="attendance.html" class="active">📊 Attendance</a></li>
+      <li><a href="grades.html">🎓 Grades</a></li>
+      <li><a href="resources.html">📚 Resources</a></li>
+      <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-content">
+
+    <!-- HEADER WITH FILTERS -->
+    <header>
+      <h1>Attendance</h1>
+
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        
+        <select id="deptFilter" onchange="filterCourses()">
+          <option value="">All Departments</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Mechanical">Mechanical</option>
+        </select>
+
+        <select id="courseFilter" onchange="filterCourses()">
+          <option value="">All Courses</option>
+        </select>
+
+        <div class="user-info">
+          <span id="userName">Loading…</span>
+          <span class="role-badge">Student</span>
         </div>
+
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="dashboard-card" id="attendanceCard">
+      <div class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <h4>No Attendance Records</h4>
+        <p>Your attendance will appear here once marked.</p>
+      </div>
     </div>
-    <script src="../js/auth.js"></script>
-    <script>
-        (async () => {
-            const token = localStorage.getItem('token');
-            const user = getCurrentUser();
-            let studentId = null;
-            try {
-                const studentRes = await fetch(`http://localhost:5000/api/students/email/${user.email}`, { headers: { Authorization: `Bearer ${token}` } });
-                if(studentRes.ok) studentId = (await studentRes.json())._id;
-                if(studentId) {
-                    const attRes = await fetch(`http://localhost:5000/api/attendance/student/${studentId}`, { headers: { Authorization: `Bearer ${token}` } });
-                    if(attRes.ok) {
-                        const data = await attRes.json();
-                        if(data.records?.length) {
-                            document.getElementById('attendanceDetails').innerHTML = `
-                                <div class="attendance-bar"><div class="attendance-fill" style="width:${data.statistics.attendancePercentage}%">${data.statistics.attendancePercentage}%</div></div>
-                                <table>${data.records.map(r => `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.courseId?.courseName}</td><td class="status-badge status-${r.status}">${r.status}</td></tr>`).join('')}</table>
-                            `;
-                        }
-                    }
-                }
-            } catch(e) { console.error(e); }
-        })();
-    </script>
+
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+
+<script>
+let allAttendance = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  const token = localStorage.getItem('token');
+  const user = getCurrentUser();
+
+  try {
+    const studentRes = await fetch(
+      `http://localhost:5000/api/students/email/${user.email}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!studentRes.ok) return;
+
+    const student = await studentRes.json();
+    document.getElementById('userName').textContent =
+      student.userId?.name || 'Student';
+
+    const attRes = await fetch(
+      `http://localhost:5000/api/attendance/student/${student._id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!attRes.ok) return;
+
+    const data = await attRes.json();
+
+    allAttendance = data.records || [];
+
+    setupCourseFilter();
+    renderAttendance(allAttendance);
+
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+
+/* ================= COURSE FILTER ================= */
+function setupCourseFilter() {
+  const courseFilter = document.getElementById('courseFilter');
+  const deptFilter = document.getElementById('deptFilter');
+
+  const courses = new Map();
+
+  allAttendance.forEach(r => {
+    if (r.courseId) {
+      courses.set(
+        r.courseId._id,
+        {
+          name: r.courseId.courseName,
+          dept: r.courseId.department || "Unknown"
+        }
+      );
+    }
+  });
+
+  courseFilter.innerHTML = `
+    <option value="">All Courses</option>
+    ${[...courses.entries()].map(([id, c]) =>
+      `<option value="${id}">${c.name}</option>`
+    ).join('')}
+  `;
+}
+
+
+/* ================= FILTER FUNCTION (FIXED) ================= */
+function filterCourses() {
+
+  const dept = document.getElementById('deptFilter').value.toLowerCase();
+  const courseId = document.getElementById('courseFilter').value;
+
+  const filtered = allAttendance.filter(r => {
+
+    const course = r.courseId;
+
+    if (!course) return false;
+
+    // SAFE department handling
+    const courseDept = (course.department || "").toLowerCase();
+
+    const matchDept =
+      !dept || courseDept.includes(dept);
+
+    const matchCourse =
+      !courseId || course._id === courseId;
+
+    return matchDept && matchCourse;
+  });
+
+  renderAttendance(filtered);
+}
+function filterCourses() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const dept = document.getElementById('deptFilter').value.toLowerCase().trim();
+
+    const filtered = allCourses.filter(c => {
+
+        const courseName = (c.courseName || "").toLowerCase();
+        const courseCode = (c.courseCode || "").toLowerCase();
+        const courseDept = (c.department || "").toLowerCase().trim(); // ✅ HERE
+
+        const matchesDept = !dept || courseDept === dept;
+        const matchesSearch = courseName.includes(q) || courseCode.includes(q);
+
+        return matchesDept && matchesSearch;
+    });
+
+    renderCourses(filtered);
+}
+
+
+/* ================= RENDER ================= */
+function renderAttendance(records) {
+
+  if (!records.length) {
+    document.getElementById('attendanceCard').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <h4>No Attendance Records</h4>
+      </div>
+    `;
+    return;
+  }
+
+  const total = records.length;
+  const present = records.filter(r => r.status === 'present').length;
+  const pct = total ? ((present / total) * 100).toFixed(2) : 0;
+
+  const color =
+    pct >= 75 ? 'var(--green)' :
+    pct >= 60 ? 'var(--amber)' :
+    'var(--red)';
+
+  document.getElementById('attendanceCard').innerHTML = `
+    <h2>Attendance Overview</h2>
+
+    <div style="font-size:2rem;color:${color};margin:10px 0;">
+      ${pct}%
+    </div>
+
+    <div class="attendance-bar">
+      <div class="attendance-fill" style="width:${pct}%;background:${color}">
+        ${pct}%
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Course</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${records.map(r => `
+          <tr>
+            <td>${new Date(r.date).toLocaleDateString()}</td>
+            <td>${r.courseId?.courseName || '—'}</td>
+            <td>${r.status}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+
+/* ================= LOGOUT ================= */
+document.getElementById('logoutBtn').addEventListener('click', e => {
+  e.preventDefault();
+  localStorage.clear();
+  window.location.href = '../login.html';
+});
+
+</script>
+
 </body>
 </html>
